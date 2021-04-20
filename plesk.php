@@ -40,9 +40,9 @@ class plesk extends rcube_plugin
     
     function storage_init_hook($args)
     {
-	$this->data['host'] = $args['host'];
-	$this->data['user'] = $args['user'];
-	$this->data['password'] = $args['password'];
+		$this->data['host'] = $args['host'];
+		$this->data['user'] = $args['user'];
+		$this->data['password'] = $args['password'];
     }
 
 
@@ -54,19 +54,19 @@ class plesk extends rcube_plugin
         
         $email_user = $this->data['user'];
  
-	if (filter_var($email_user,FILTER_VALIDATE_EMAIL)) {
-	    $email_domain = array_pop(explode('@', $email_user));
-	    $email_name = substr($email_user, 0, strrpos($email_user, '@'));
-	}
-        
-        $plesk_host = $rcmail->config->get('plesk_host');
-	$plesk_login = $rcmail->config->get('plesk_login');
-	$plesk_password = $rcmail->config->get('plesk_password');
+		if (filter_var($email_user,FILTER_VALIDATE_EMAIL)) {
+		    $email_domain = array_pop(explode('@', $email_user));
+		    $email_name = substr($email_user, 0, strrpos($email_user, '@'));
+		}
+	        
+	    $plesk_host = $rcmail->config->get('plesk_host');
+		$plesk_login = $rcmail->config->get('plesk_login');
+		$plesk_password = $rcmail->config->get('plesk_password');
+			
+		$plesk_client = new PleskApiClient($plesk_host);
+		$plesk_client->setCredentials($plesk_login, $plesk_password);
 		
-	$plesk_client = new PleskApiClient($plesk_host);
-	$plesk_client->setCredentials($plesk_login, $plesk_password);
-		
-	$plek_domain = <<<EOF
+		$plek_domain = <<<EOF
 <packet>
 	<site>
 	    <get>
@@ -80,10 +80,10 @@ class plesk extends rcube_plugin
 	</site>
 </packet>
 EOF;
-	$plesk_domain_response = new SimpleXMLElement($plesk_client->request($plek_domain));	
-	$plesk_client_domain = $plesk_domain_response->site->get->result->id;
-			
-	$plek_email = <<<EOF
+		$plesk_domain_response = new SimpleXMLElement($plesk_client->request($plek_domain));	
+		$plesk_client_domain = $plesk_domain_response->site->get->result->id;
+				
+		$plek_email = <<<EOF
 <packet>
 	<mail>
 		<get_info>
@@ -99,10 +99,10 @@ EOF;
 	</mail>
 </packet>
 EOF;
-	$plesk_email_response = new SimpleXMLElement($plesk_client->request($plek_email));
-	$plesk_client_email = $plesk_email_response->mail->get_info->result->mailname;
-
-	$plek_email_update = <<<EOF
+		$plesk_email_response = new SimpleXMLElement($plesk_client->request($plek_email));
+		$plesk_client_email = $plesk_email_response->mail->get_info->result->mailname;
+	
+		$plek_email_update = <<<EOF
 <packet>
 	<mail>
 		<update>
@@ -126,7 +126,7 @@ EOF;
         
         if ($plesk_client_email->forwarding->enabled == 'true') {
 	    	$forwarding_enabled = 'checked';
-	}
+		}
         $table->add('title', $this->gettext('email_forwarding_enabled'));
         $table->add('value', '<input type="checkbox"' . $forwarding_enabled . '>');
         
@@ -176,7 +176,7 @@ EOF;
         	$autoresponder_end_date = date_create($plesk_client_email->autoresponder->end_date);
         }
         $table->add('title', html::label('', rcube::Q($this->gettext('email_autoresponder_end_date'))));
-	$table->add('value', '<input type="text" value="' . date_format($autoresponder_end_date,"d F Y") . '">');
+		$table->add('value', '<input type="text" value="' . date_format($autoresponder_end_date,"d F Y") . '">');
 		
         $table->add(array('colspan' => 2), '<a class="btn btn-primary" style="padding: 8px 10px;" href="https://' . $plesk_host . ':8443/login_up.php3?login_name=' . $this->data['user'] . '&passwd=' . $this->data['password'] . '&success_redirect_url=https://' . $plesk_host . ':8443/smb/email-address/edit/id/' . $plesk_client_email->id . '/' . '" target="_blank">' . $this->gettext('email_settings') . '</a>');
 
