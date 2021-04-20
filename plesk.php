@@ -4,7 +4,7 @@ require_once('PleskApiClient.php');
 
 class plesk extends rcube_plugin
 {
-	public $task 	= 'settings';
+    public $task = 'settings';
 
     function init()
     {
