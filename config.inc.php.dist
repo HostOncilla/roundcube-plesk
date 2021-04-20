@@ -1,0 +1,6 @@
+<?php
+
+// Show email password	
+$config['plesk_host'] = '';
+$config['plesk_login'] = '';
+$config['plesk_password'] = '';

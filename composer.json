@@ -1,0 +1,26 @@
+{
+    "name": "projectmyst/plesk",
+    "type": "roundcube-plugin",
+    "description": "Adds Email Fowarding, Email Aliases, and Auto Reply to Roundcube",
+    "keywords": ["configuration","settings"],
+    "homepage": "https://github.com/ProjectMyst/roundcube-plesk",
+    "license": "GPL-3.0+",
+    "version": "1.0",
+    "authors": [
+        {
+            "name": "Geraldo V Vieira",
+            "email": "admin@hostoncilla.co.uk",
+            "role": "Lead"
+        }
+    ],
+    "repositories": [
+        {
+            "type": "composer",
+            "url": "https://plugins.roundcube.net"
+        }
+    ],
+    "require": {
+        "php": ">=5.3.0",
+        "roundcube/plugin-installer": ">=0.1.3"
+    }
+}
