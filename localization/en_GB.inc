@@ -1,16 +1,20 @@
 <?php
-$labels = array();
+
+$labels = [];
 $labels['plesk'] = 'Control Panel';
 $labels['email_forwarding'] = 'Forwarding';
-$labels['email_forwarding_enabled'] = 'Switch on mail forwarding';
+$labels['forwarding_switch'] = 'Switch on mail forwarding';
 $labels['email_aliases'] = 'Email Aliases';
-$labels['email_autoresponder'] = 'Auto Reply';
-$labels['email_autoresponder_enabled'] = 'Switch on auto reply';
-$labels['email_autoresponder_subject'] = 'Auto reply message subject';
-$labels['email_autoresponder_content_type'] = 'Message format';
-$labels['email_autoresponder_charset'] = 'Encoding';
-$labels['email_autoresponder_message'] = 'Auto reply message text';
-$labels['email_autoresponder_forward'] = 'Forward to';
-$labels['email_autoresponder_end_date'] = 'Switch off auto reply on';
-$labels['email_settings'] = 'Edit Settings';
-?>
+$labels['email_autoreply'] = 'Auto Reply';
+$labels['autoreply_switch'] = 'Switch on auto reply';
+$labels['autoreply_subject'] = 'Auto reply message subject';
+$labels['autoreply_content_type'] = 'Message format';
+$labels['autoreply_text_plain'] = 'Plain text';
+$labels['autoreply_text_html'] = 'HTML';
+$labels['autoreply_charset'] = 'Encoding';
+$labels['autoreply_charset_utf8'] = 'UTF-8';
+$labels['autoreply_message'] = 'Auto reply message text';
+$labels['autoreply_forward'] = 'Forward to';
+$labels['autoreply_end_date'] = 'Switch off auto reply on';
+$labels['autoreply_attachment'] = 'Attach a file';
+$labels['email_settings'] = 'Edit';
