@@ -1,6 +1,10 @@
 <?php
 
-// Show email password	
+// Plesk Host URL	
 $config['plesk_host'] = '';
+
+// Plesk Admin Username
 $config['plesk_login'] = '';
+
+// Plesk Admin Password
 $config['plesk_password'] = '';
