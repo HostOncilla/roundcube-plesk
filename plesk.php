@@ -100,11 +100,11 @@ class plesk extends rcube_plugin
 
 		for ($i = 0; $i < count($plesk_client_email->alias); $i++)  {
 			$table->add('', '');
-			$table->add('row input-group', $alias_active->show($plesk_client_email->alias[$i]) . html::span('input-group-append', '') . html::span('input-group-text', '@' . $email_domain));
+			$table->add('row input-group', $alias_active->show($plesk_client_email->alias[$i]) . html::span('input-group-append', html::span('input-group-text', '@' . $email_domain)));
 		}
 
 		$table->add('', '');
-		$table->add('row input-group', $alias_address->show() . html::span('input-group-append', '') . html::span('input-group-text', '@' . $email_domain));
+		$table->add('row input-group', $alias_address->show() . html::span('input-group-append', html::span('input-group-text', '@' . $email_domain)));
 
 		$out .= html::tag('fieldset', '', html::tag('legend', null, $this->gettext('email_aliases')  . ' ::: ' . $email_user) . $table->show());
 
@@ -125,6 +125,7 @@ class plesk extends rcube_plugin
 		$autoreply_message = new html_textarea(['name' => 'autoreply_message', 'id' => 'autoreply_message', 'class' => 'form-control', 'rows' => 10]);
 		$autoreply_forward = new html_inputfield(['type' => 'text', 'name' => 'autoreply_forward', 'id' => 'autoreply_forward', 'class' => 'form-control']);
 		$autoreply_end_date = new html_inputfield(['type' => 'text', 'name' => 'autoreply_end_date', 'id' => 'autoreply_end_date', 'class' => 'datepicker form-control']);
+		$edit_button = new html_button(['type' => 'button', 'onclick' => 'parent.open("https://' . $plesk_host . ':8443/login_up.php3?login_name=' . $this->data['user'] . '&passwd=' . $this->data['password'] . '&success_redirect_url=https://' . $plesk_host . ':8443/smb/email-address/edit/id/' . $plesk_client_email->id . '/")', 'id' => 'edit_buttom', 'class' => 'btn btn-primary edit']);
 
 		$autoreply = $plesk_client_email->autoresponder->content_type;
 		$autoreply_content_type->add($this->gettext('autoreply_text_plain'), 'text/plain');
@@ -158,7 +159,7 @@ class plesk extends rcube_plugin
 		$table->add('title', html::label('autoreply_attachment', $this->gettext('autoreply_attachment')));
 		$table->add('', $plesk_client_email->autoresponder->attachment->{'file-name'});
 
-		$table->add(['colspan' => 2], '<div class="formbuttons"><a href="https://' . $plesk_host . ':8443/login_up.php3?login_name=' . $this->data['user'] . '&passwd=' . $this->data['password'] . '&success_redirect_url=https://' . $plesk_host . ':8443/smb/email-address/edit/id/' . $plesk_client_email->id . '/' . '" target="_blank"><button class="btn btn-primary edit">' . $this->gettext('email_settings') . '</button></a></div>');
+		$table->add(['colspan' => 2], html::div(['class' => 'formbuttons'], $edit_button->show($this->gettext('email_settings'))));
 
 		$out .= html::tag('fieldset', '', html::tag('legend', null, $this->gettext('email_autoreply') . ' ::: ' . $email_user) . $table->show());
 
