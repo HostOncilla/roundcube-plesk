@@ -1,3 +1,11 @@
-.listing.iconized li.plesk > a:before {
-	content: "\f0c9"
+.listing.iconized li.plesk-aliases > a:before {
+	content: "\f0e0"
+}
+
+.listing.iconized li.plesk-fowarding > a:before {
+	content: "\f14d"
+}
+
+.listing.iconized li.plesk-autoreply > a:before {
+	content: "\f3e5"
 }
