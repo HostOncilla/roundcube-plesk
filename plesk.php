@@ -1,6 +1,12 @@
 <?php
- 
-require_once('PleskApiClient.php');
+
+/**
+ *
+ * Plesk
+ *
+ **/
+
+include_once __dir__ . '/PleskApiClient.php';
 
 class plesk extends rcube_plugin
 {
@@ -8,10 +14,11 @@ class plesk extends rcube_plugin
 
 	function init()
 	{
+		$this->register_action('plugin.plesk-autoreply', [$this, 'plesk_autoreply']);
+		$this->register_action('plugin.plesk-fowarding', [$this, 'plesk_fowarding']);
+		$this->register_action('plugin.plesk-aliases', [$this, 'plesk_aliases']);
 		$this->add_hook('settings_actions', [$this, 'settings_actions']);
-		$this->add_hook('template_object_plugin.body', [$this, 'strinng_replace']);
 		$this->add_hook('storage_init', [$this, 'storage_init_hook']);
-		$this->register_action('plugin.plesk', [$this, 'infostep']);
 		$this->load_config();
 		$this->add_texts('localization/');
 		$this->include_stylesheet($this->local_skin_path() .'/plesk.css');
@@ -19,22 +26,55 @@ class plesk extends rcube_plugin
 
 	function settings_actions($args)
 	{
+
 		$args['actions'][] = [
-			'action' => 'plugin.plesk',
-			'class'  => 'plesk',
-			'label'  => 'plesk',
+			'action' => 'plugin.plesk-autoreply',
+			'class'  => 'plesk-autoreply',
+			'label'  => 'plesk_autoreply',
 			'domain' => 'plesk',
-			'title'  => 'plesk',
+			'title'  => 'plesk_autoreply',
+		];
+
+		$args['actions'][] = [
+			'action' => 'plugin.plesk-fowarding',
+			'class'  => 'plesk-fowarding',
+			'label'  => 'plesk_fowarding',
+			'domain' => 'plesk',
+			'title'  => 'plesk_fowarding',
+		];
+
+		$args['actions'][] = [
+			'action' => 'plugin.plesk-aliases',
+			'class'  => 'plesk-aliases',
+			'label'  => 'plesk_aliases',
+			'domain' => 'plesk',
+			'title'  => 'plesk_aliases',
 		];
 
 		return $args;
 	}
 
-	function infostep()
+	function plesk_autoreply()
 	{
-		$this->register_handler('plugin.body', [$this, 'infohtml']);
+		$this->register_handler('plugin.body', [$this, 'autoreply_html']);
 		$rcmail = rcmail::get_instance();
-		$rcmail->output->set_pagetitle($this->gettext('plugin'));
+		$rcmail->output->set_pagetitle($this->gettext('plesk_autoreply'));
+		$rcmail->output->send('plugin');
+	}
+
+	function plesk_fowarding()
+	{
+		$this->register_handler('plugin.body', [$this, 'fowarding_html']);
+		$rcmail = rcmail::get_instance();
+		$rcmail->output->set_pagetitle($this->gettext('plesk_fowarding'));
+		$rcmail->output->send('plugin');
+	}
+
+	function plesk_aliases()
+	{
+		$this->register_handler('plugin.body', [$this, 'aliases_html']);
+		$rcmail = rcmail::get_instance();
+		$rcmail->output->set_pagetitle($this->gettext('plesk_aliases'));
 		$rcmail->output->send('plugin');
 	}
 
@@ -44,71 +84,9 @@ class plesk extends rcube_plugin
 		$this->data['password'] = $args['password'];
 	}
 
-	function infohtml()
+	function autoreply_html()
 	{
-		$rcmail = rcmail::get_instance();
-		$user = $rcmail->user;
-		$storage = $rcmail->get_storage();		
-
-		$email_user = $this->data['user'];
-
-		if (filter_var($email_user,FILTER_VALIDATE_EMAIL)) {
-			$email_domain = array_pop(explode('@', $email_user));
-			$email_name = substr($email_user, 0, strrpos($email_user, '@'));
-		}
-
-		$plesk_host = $rcmail->config->get('plesk_host');
-		$plesk_login = $rcmail->config->get('plesk_login');
-		$plesk_password = $rcmail->config->get('plesk_password');
-
-		$plesk_client = new PleskApiClient($plesk_host);
-		$plesk_client->setCredentials($plesk_login, $plesk_password);
-
-		require('ApiCalls.php');
-
-		// Email Fowarding
-
-		if ($plesk_client_email->forwarding->enabled == 'true') {
-			$forwarding_enabled = 'checked';
-		}
-
-		$forwarding_switch = new html_inputfield(['type' => 'checkbox', $forwarding_enabled => $forwarding_enabled, 'name' => 'forwarding_switch', 'id' => 'forwarding_switch', 'class' => 'form-check-input']);
-		$forwarding_address = new html_inputfield(['type' => 'text', 'name' => 'forwarding_address', 'id' => 'forwarding_address', 'class' => 'form-control']);
-		$forwarding_active = new html_inputfield(['type' => 'text', 'name' => 'forwarding_active', 'id' => 'forwarding_active', 'class' => 'form-control']);
-
-		$table = new html_table(['cols' => 2, 'class' => 'plesk propform']);
-
-		$table->add('title', html::label('forwarding_switch', $this->gettext('forwarding_switch')));
-		$table->add('', $forwarding_switch->show());
-
-		for ($i = 0; $i < count($plesk_client_email->forwarding->address); $i++)  {
-			$table->add('', '');
-			$table->add('', $forwarding_active->show($plesk_client_email->forwarding->address[$i]));
-		}
-
-		$table->add('', '');
-		$table->add('', $forwarding_address->show());
-
-		$out .= html::tag('fieldset', '', html::tag('legend', null, $this->gettext('email_forwarding')  . ' ::: ' . $email_user) . $table->show());
-
-		// Email Aliases
-
-		$alias_active = new html_inputfield(['type' => 'text', 'name' => 'alias_active', 'id' => 'alias_active', 'class' => 'form-control']);
-		$alias_address = new html_inputfield(['type' => 'text', 'name' => 'alias_address', 'id' => 'alias_address', 'class' => 'form-control']);
-
-		$table = new html_table(['cols' => 2, 'class' => 'plesk propform']);
-
-		for ($i = 0; $i < count($plesk_client_email->alias); $i++)  {
-			$table->add('', '');
-			$table->add('row input-group', $alias_active->show($plesk_client_email->alias[$i]) . html::span('input-group-append', html::span('input-group-text', '@' . $email_domain)));
-		}
-
-		$table->add('', '');
-		$table->add('row input-group', $alias_address->show() . html::span('input-group-append', html::span('input-group-text', '@' . $email_domain)));
-
-		$out .= html::tag('fieldset', '', html::tag('legend', null, $this->gettext('email_aliases')  . ' ::: ' . $email_user) . $table->show());
-
-		// Auto Reply
+		include_once __dir__ . '/ApiCalls.php';
 
 		if ($plesk_client_email->autoresponder->enabled == 'true') {
 			$autoreply_checked = 'checked';
@@ -119,13 +97,15 @@ class plesk extends rcube_plugin
 		}
 
 		$autoreply_switch = new html_inputfield(['type' => 'checkbox', $autoreply_checked => $autoreply_checked, 'name' => 'autoreply_switch', 'id' => 'autoreply_switch', 'class' => 'form-check-input']);
-		$autoreply_subject = new html_inputfield(['type' => 'text', 'name' => 'autoreply_subject', 'id' => 'autoreply_subject', 'class' => 'form-control']);
+		$autoreply_subject = new html_inputfield(['type' => 'text', 'name' => 'autoreply_subject', 'id' => 'autoreply_subject', 'placeholder' => 'Re: <request_subject>', 'value' => 'Re: <request_subject>', 'class' => 'form-control']);
 		$autoreply_content_type = new html_select(['name' => 'autoreply_content_type', 'id' => 'autoreply_content_type', 'class' => 'form-control']);
 		$autoreply_charset = new html_select(['name' => 'autoreply_content_type', 'id' => 'autoreply_content_type', 'class' => 'form-control']);
 		$autoreply_message = new html_textarea(['name' => 'autoreply_message', 'id' => 'autoreply_message', 'class' => 'form-control', 'rows' => 10]);
 		$autoreply_forward = new html_inputfield(['type' => 'text', 'name' => 'autoreply_forward', 'id' => 'autoreply_forward', 'class' => 'form-control']);
 		$autoreply_end_date = new html_inputfield(['type' => 'text', 'name' => 'autoreply_end_date', 'id' => 'autoreply_end_date', 'class' => 'datepicker form-control']);
-		$edit_button = new html_button(['type' => 'button', 'onclick' => 'parent.open("https://' . $plesk_host . ':8443/login_up.php3?login_name=' . $this->data['user'] . '&passwd=' . $this->data['password'] . '&success_redirect_url=https://' . $plesk_host . ':8443/smb/email-address/edit/id/' . $plesk_client_email->id . '/")', 'id' => 'edit_buttom', 'class' => 'btn btn-primary edit']);
+		// ====>>> temporarily code, to be deleted //
+		$edit_button = new html_button(['type' => 'button', 'onclick' => 'window.open("https://' . $plesk_host . ':8443/enterprise/rsession_init.php?PLESKSESSID=' . $plesk_client_session . '&success_redirect_url=https://' . $plesk_host . ':8443/smb/email-address/edit/id/' . $plesk_client_email->id . '/", "_blank")', 'id' => 'edit_buttom', 'class' => 'btn btn-primary edit']);
+		// <<<=== //
 
 		$autoreply = $plesk_client_email->autoresponder->content_type;
 		$autoreply_content_type->add($this->gettext('autoreply_text_plain'), 'text/plain');
@@ -136,7 +116,7 @@ class plesk extends rcube_plugin
 		$table = new html_table(['cols' => 2, 'class' => 'plesk propform']);
 
 		$table->add('title', html::label('autoreply_switch', $this->gettext('autoreply_switch')));
-		$table->add('', $autoreply_switch->show($plesk_client_email->autoresponder->content_type));
+		$table->add('', $autoreply_switch->show($plesk_client_email->autoresponder->enabled));
 
 		$table->add('title', html::label('auto_subject', $this->gettext('autoreply_subject')));
 		$table->add('', $autoreply_subject->show($plesk_client_email->autoresponder->subject));
@@ -161,9 +141,70 @@ class plesk extends rcube_plugin
 
 		$table->add(['colspan' => 2], html::div(['class' => 'formbuttons'], $edit_button->show($this->gettext('email_settings'))));
 
-		$out .= html::tag('fieldset', '', html::tag('legend', null, $this->gettext('email_autoreply') . ' ::: ' . $email_user) . $table->show());
+		$out .= html::tag('fieldset', '', html::tag('legend', null, $this->gettext('plesk_autoreply') . ' ::: ' . $this->data['user']) . $table->show());
 
 		return html::div(['class' => 'box formcontent'], html::div(['class' => 'boxtitle']) . html::div(['class' => 'boxcontent'], $out));
+	}
 
+	function fowarding_html()
+	{
+		include_once __dir__ . '/ApiCalls.php';
+
+		if ($plesk_client_email->forwarding->enabled == 'true') {
+			$forwarding_enabled = 'checked';
+		}
+
+		$forwarding_switch = new html_inputfield(['type' => 'checkbox', $forwarding_enabled => $forwarding_enabled, 'name' => 'forwarding_switch', 'id' => 'forwarding_switch', 'class' => 'form-check-input']);
+		$forwarding_address = new html_inputfield(['type' => 'text', 'name' => 'forwarding_address', 'id' => 'forwarding_address', 'class' => 'form-control']);
+		$forwarding_active = new html_inputfield(['type' => 'text', 'name' => 'forwarding_active', 'id' => 'forwarding_active', 'class' => 'form-control']);
+		// ====>>> temporarily code, to be deleted //
+		$edit_button = new html_button(['type' => 'button', 'onclick' => 'window.open("https://' . $plesk_host . ':8443/enterprise/rsession_init.php?PLESKSESSID=' . $plesk_client_session . '&success_redirect_url=https://' . $plesk_host . ':8443/smb/email-address/edit/id/' . $plesk_client_email->id . '/", "_blank")', 'id' => 'edit_buttom', 'class' => 'btn btn-primary edit']);
+		// <<<=== //
+
+		$table = new html_table(['cols' => 2, 'class' => 'plesk propform']);
+
+		$table->add('title', html::label('forwarding_switch', $this->gettext('forwarding_switch')));
+		$table->add('', $forwarding_switch->show($plesk_client_email->forwarding->enabled));
+
+		for ($i = 0; $i < count($plesk_client_email->forwarding->address); $i++)  {
+			$table->add('title', html::label('fowarding_message', $this->gettext('fowarding_message')));
+			$table->add('row input-group', $forwarding_active->show($plesk_client_email->forwarding->address[$i]) . html::span('input-group-append', html::tag('a', ['class' => 'input-group-text icon delete'], html::span('inner', $this->gettext('delete')))));
+		}
+
+		$table->add('title', html::label('add_forwarding', $this->gettext('add_forwarding')));
+		$table->add('row input-group', $forwarding_address->show() . html::span('input-group-append', html::tag('a', ['class' => 'input-group-text icon delete disabled'], html::span('inner', $this->gettext('delete')))));
+
+		$table->add(['colspan' => 2], html::div(['class' => 'formbuttons'], $edit_button->show($this->gettext('email_settings'))));
+
+		$out .= html::tag('fieldset', '', html::tag('legend', null, $this->gettext('plesk_fowarding')  . ' ::: ' . $this->data['user']) . $table->show());
+
+		return html::div(['class' => 'box formcontent'], html::div(['class' => 'boxtitle']) . html::div(['class' => 'boxcontent'], $out));
+	}
+
+	function aliases_html()
+	{
+		include_once __dir__ . '/ApiCalls.php';
+
+		$alias_active = new html_inputfield(['type' => 'text', 'name' => 'alias_active', 'id' => 'alias_active', 'class' => 'form-control']);
+		$alias_address = new html_inputfield(['type' => 'text', 'name' => 'alias_address', 'id' => 'alias_address', 'class' => 'form-control']);
+		// ====>>> temporarily code, to be deleted //
+		$edit_button = new html_button(['type' => 'button', 'onclick' => 'window.open("https://' . $plesk_host . ':8443/enterprise/rsession_init.php?PLESKSESSID=' . $plesk_client_session . '&success_redirect_url=https://' . $plesk_host . ':8443/smb/email-address/edit/id/' . $plesk_client_email->id . '/", "_blank")', 'id' => 'edit_buttom', 'class' => 'btn btn-primary edit']);
+		// <<<=== //
+
+		$table = new html_table(['cols' => 2, 'class' => 'plesk propform']);
+
+		for ($i = 0; $i < count($plesk_client_email->alias); $i++)  {
+			$table->add('title', html::label('alias_address', $this->gettext('alias_address') . ' (' . $plesk_client_email->alias[$i] . ')'));
+			$table->add('row input-group', $alias_active->show($plesk_client_email->alias[$i]) . html::span('input-group-append', html::span('input-group-text', '@' . $email_domain)) . html::span('input-group-append', html::tag('a', ['class' => 'input-group-text icon delete'], html::span('inner', $this->gettext('delete')))));
+		}
+
+		$table->add('title', html::label('add_alias', $this->gettext('add_alias')));
+		$table->add('row input-group', $alias_address->show() . html::span('input-group-append', html::span('input-group-text', '@' . $email_domain)) . html::span('input-group-append', html::tag('a', ['class' => 'input-group-text icon delete disabled'], html::span('inner', $this->gettext('delete')))));
+
+		$table->add(['colspan' => 2], html::div(['class' => 'formbuttons'], $edit_button->show($this->gettext('email_settings'))));
+
+		$out .= html::tag('fieldset', '', html::tag('legend', null, $this->gettext('plesk_aliases')  . ' ::: ' . $this->data['user']) . $table->show());
+
+		return html::div(['class' => 'box formcontent'], html::div(['class' => 'boxtitle']) . html::div(['class' => 'boxcontent'], $out));
 	}
 }
